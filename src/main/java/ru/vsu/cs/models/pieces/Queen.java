@@ -11,6 +11,10 @@ public class Queen extends  AbstractPiece { // ФЕРЗЬ
     }
 
     @Override
+    public String getName() {
+        return "ФЕРЗЬ";
+    }
+    @Override
     public AbstractPiece movePiece(Cage newCage) {
         return new Queen(newCage, color);
     }

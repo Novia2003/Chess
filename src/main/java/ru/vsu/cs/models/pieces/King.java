@@ -15,6 +15,10 @@ public class King extends AbstractPiece{
     }
 
     @Override
+    public String getName() {
+        return "КОРОЛЬ";
+    }
+    @Override
     public AbstractPiece movePiece(Cage newCage) {
         return new King(newCage, color);
     }

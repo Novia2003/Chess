@@ -11,6 +11,11 @@ public class Bishop extends AbstractPiece { // СЛОН
     }
 
     @Override
+    public String getName() {
+        return "СЛОН";
+    }
+
+    @Override
     public AbstractPiece movePiece(Cage newCage) {
         return new Bishop(newCage, color);
     }

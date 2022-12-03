@@ -30,6 +30,7 @@ public abstract class AbstractPiece implements Piece {
     public PieceColor getColor() {
         return color;
     }
+    public abstract String getName();
 
     public abstract AbstractPiece movePiece(Cage newCage);
     protected void updatePossibleSteps() {

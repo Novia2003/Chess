@@ -11,6 +11,10 @@ public class Rook extends AbstractPiece { // ЛАДЬЯ
     }
 
     @Override
+    public String getName() {
+        return "ЛАДЬЯ";
+    }
+    @Override
     public AbstractPiece movePiece(Cage newCage) {
         return new Rook(newCage, color);
     }

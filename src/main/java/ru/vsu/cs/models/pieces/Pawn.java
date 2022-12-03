@@ -11,13 +11,18 @@ public class Pawn extends AbstractPiece { // ПЕШКА
     }
 
     @Override
+    public String getName() {
+        return "ПЕШКА";
+    }
+
+    @Override
     public AbstractPiece movePiece(Cage newCage) {
         final boolean isNewWhiteQueen = cage.horizontal() == 11 - Math.abs(6 - cage.vertical()) &&
                 PieceColor.WHITE == color;
         final boolean isNewBlackQueen = cage.horizontal() == 1 && PieceColor.BLACK == color;
 
         if (isNewBlackQueen || isNewWhiteQueen) {
-            return new Queen(cage, color);
+            return new Queen(newCage, color);
         }
 
         return new Pawn(newCage, color);

@@ -14,6 +14,10 @@ public class Knight extends AbstractPiece { // КОНЬ
     }
 
     @Override
+    public String getName() {
+        return "КОНЬ";
+    }
+    @Override
     public AbstractPiece movePiece(Cage newCage) {
         return new Knight(newCage, color);
     }
