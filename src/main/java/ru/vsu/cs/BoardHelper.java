@@ -4,7 +4,14 @@ import ru.vsu.cs.models.Cage;
 import ru.vsu.cs.models.PieceColor;
 import ru.vsu.cs.models.pieces.*;
 
+import java.util.Arrays;
+
 public class BoardHelper {
+
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
+
     public static AbstractPiece[][] getBoardWithInitialPositionPieces() {
         AbstractPiece[][] board = new AbstractPiece[11][];
 
@@ -66,5 +73,58 @@ public class BoardHelper {
         } else {
             return false;
         }
+    }
+
+    public static String[][] getBoardForConsole(AbstractPiece[][] array) {
+        String[][] board = new String[21][11];
+        for (String[] row : board) {
+            Arrays.fill(row, "        ");
+        }
+
+        int flag = 5;
+
+        for (int row = 0; row < array.length; row++) {
+            for (int col = 0; col < array[row].length; col++) {
+                int boardRow, boardCol;
+
+                if (row <= flag) {
+                    boardRow = row * 2 + Math.abs(flag - col);
+                    boardCol = col;
+                } else {
+                    int shift = row - flag;
+
+                    boardRow = row * 2 + Math.abs((flag - shift) - col);
+                    boardCol = col + shift;
+                }
+
+                board[boardRow][boardCol] = getDecoratedCage(array[row][col]);
+            }
+        }
+
+        return board;
+    }
+
+    private static String getDecoratedCage(AbstractPiece piece) {
+        if (piece == null) {
+            return ANSI_YELLOW_BACKGROUND + "        " + ANSI_RESET;
+        }
+
+        String name = piece.getName();
+        String result;
+
+        switch (name.length()) {
+            case 4 -> result = "  " + name + "  ";
+            case 5 -> result = " " + name + "  ";
+            case 6 -> result = " " + name + " ";
+            default -> throw new IllegalStateException("Я не создавал фигуру с названием из " + name.length() + " букв");
+        }
+
+        if (piece.getColor() == PieceColor.BLACK) {
+            result = ANSI_YELLOW_BACKGROUND + ANSI_BLACK + result + ANSI_RESET;
+        } else {
+            result = ANSI_YELLOW_BACKGROUND + result + ANSI_RESET;
+        }
+
+        return result;
     }
 }

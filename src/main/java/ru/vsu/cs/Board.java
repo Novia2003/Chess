@@ -18,15 +18,8 @@ public class Board {
         this.color = PieceColor.WHITE;
     }
 
-    public AbstractPiece[][] getField() {
-        AbstractPiece[][] copy = new AbstractPiece[11][];
-
-        for (int i = 0; i < 11; i++) {
-            int length = (i > 5) ? 11 - 2 * (i - 5) : 11;
-            System.arraycopy(board[i], 0, copy[i], 0, length);
-        }
-
-        return copy;
+    public String[][] getField() {
+        return BoardHelper.getBoardForConsole(board);
     }
 
     public void executeCommand(String command) {
@@ -34,7 +27,7 @@ public class Board {
             throw new IllegalStateException("Конец партии");
         }
 
-        final var step = Converter.convertStringToStep(command);
+        Step step = Converter.convertStringToStep(command);
         movePiece(step);
     }
 

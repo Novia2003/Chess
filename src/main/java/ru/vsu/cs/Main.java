@@ -1,15 +1,31 @@
 package ru.vsu.cs;
 
 
+import ru.vsu.cs.models.Cage;
+import ru.vsu.cs.models.PieceColor;
+import ru.vsu.cs.models.pieces.AbstractPiece;
+import ru.vsu.cs.models.pieces.Bishop;
+
 public class Main {
     public static void main(String[] args) {
-       Board board = BoardFactory.create();
-       board.executeCommand("b1 b3");
-       board.executeCommand("k7 k6");
+        Board board = BoardFactory.create();
+        writeBoardToConsole(board.getField());
+        board.executeCommand("b1 b3");
+        writeBoardToConsole(board.getField());
+        board.executeCommand("k7 k6");
+        writeBoardToConsole(board.getField());
+    }
+
+    private static void writeBoardToConsole(String[][] board) {
+        for (int row = board.length - 1; row > -1; row--) {
+            for (String col : board[row]) {
+                System.out.print(col);
+            }
+            System.out.println();
+        }
+        System.out.println();
     }
 }
-
-
 
 
 
