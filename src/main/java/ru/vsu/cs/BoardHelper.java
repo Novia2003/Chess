@@ -5,12 +5,19 @@ import ru.vsu.cs.models.PieceColor;
 import ru.vsu.cs.models.pieces.*;
 
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class BoardHelper {
 
     private static final String ANSI_RESET = "\u001B[0m";
     private static final String ANSI_BLACK = "\u001B[30m";
-    public static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
+    private static final String ANSI_WHITE = "\u001B[37m";
+    private static final String ANSI_YELLOW_BACKGROUND = "\u001B[43m";
+
+    private static final String ANSI_GREEN_BACKGROUND = "\u001B[42m";
+    private static final String ANSI_BLUE_BACKGROUND = "\u001B[44m";
+    private static final String ANSI_PURPLE_BACKGROUND = "\u001B[45m";
+    private static final String ANSI_CYAN_BACKGROUND = "\u001B[46m";
 
     public static AbstractPiece[][] getBoardWithInitialPositionPieces() {
         AbstractPiece[][] board = new AbstractPiece[11][];
@@ -26,7 +33,7 @@ public class BoardHelper {
         board[0][4] = new Queen(new Cage(5, 1), PieceColor.WHITE);
 
         for (int i = 0; i < 3; i++) {
-         board[i][5] = new Bishop(new Cage(6, 1 + i), PieceColor.WHITE);
+            board[i][5] = new Bishop(new Cage(6, 1 + i), PieceColor.WHITE);
         }
 
         board[0][6] = new King(new Cage(7, 1), PieceColor.WHITE);
@@ -116,7 +123,8 @@ public class BoardHelper {
             case 4 -> result = "  " + name + "  ";
             case 5 -> result = " " + name + "  ";
             case 6 -> result = " " + name + " ";
-            default -> throw new IllegalStateException("Я не создавал фигуру с названием из " + name.length() + " букв");
+            default ->
+                    throw new IllegalStateException("Я не создавал фигуру с названием из " + name.length() + " букв");
         }
 
         if (piece.getColor() == PieceColor.BLACK) {
@@ -126,5 +134,23 @@ public class BoardHelper {
         }
 
         return result;
+    }
+
+    public static void writeBoardToConsole(String[][] board) {
+        for (int row = board.length - 1; row > -1; row--) {
+            for (String col : board[row]) {
+                System.out.print(col);
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    public static String readCommand(PieceColor color) {
+        String currentColor = (color == PieceColor.WHITE) ? "белые" : "чёрное";
+        System.out.println("Сейчас ходят " + currentColor + " фигуры:");
+        Scanner scanner = new Scanner(System.in);
+        String command = scanner.nextLine();
+        return command.strip();
     }
 }

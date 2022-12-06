@@ -1,29 +1,26 @@
 package ru.vsu.cs;
 
-
-import ru.vsu.cs.models.Cage;
-import ru.vsu.cs.models.PieceColor;
-import ru.vsu.cs.models.pieces.AbstractPiece;
-import ru.vsu.cs.models.pieces.Bishop;
+import static ru.vsu.cs.BoardHelper.readCommand;
+import static ru.vsu.cs.BoardHelper.writeBoardToConsole;
 
 public class Main {
     public static void main(String[] args) {
         Board board = BoardFactory.create();
-        writeBoardToConsole(board.getField());
-        board.executeCommand("b1 b3");
-        writeBoardToConsole(board.getField());
-        board.executeCommand("k7 k6");
-        writeBoardToConsole(board.getField());
+        play(board);
     }
 
-    private static void writeBoardToConsole(String[][] board) {
-        for (int row = board.length - 1; row > -1; row--) {
-            for (String col : board[row]) {
-                System.out.print(col);
+    private static void play(Board board) {
+        writeBoardToConsole(board.getField());
+
+        while (!board.isGameEnded()) {
+            try {
+                board.executeCommand(readCommand(board.getColor()));
+                writeBoardToConsole(board.getField());
+            } catch (IllegalArgumentException exception) {
+                System.out.println(exception.getMessage());
+                System.out.println("Не расстраивайся, всё образумится. Попробуй ещё раз");
             }
-            System.out.println();
         }
-        System.out.println();
     }
 }
 
