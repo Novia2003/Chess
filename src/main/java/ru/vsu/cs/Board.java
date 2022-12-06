@@ -13,8 +13,9 @@ public class Board {
     private boolean isGameEnded;
     private PieceColor color;
 
-    private boolean isPreviousMoveAvoidedBattle;
+    private boolean isMagicMovePossible;
     private Cage cageThatWasJumpedOver;
+
     public Board(AbstractPiece[][] boardWithInitialPositionPieces) {
         this.board = boardWithInitialPositionPieces;
         this.isGameEnded = false;
@@ -25,11 +26,15 @@ public class Board {
         return BoardHelper.getBoardForConsole(board);
     }
 
-    public void executeCommand(String command) {
-        if(isGameEnded) {
-            throw new IllegalStateException("Конец партии");
-        }
+    public boolean isGameEnded() {
+        return isGameEnded;
+    }
 
+    public PieceColor getColor() {
+        return color;
+    }
+
+    public void executeCommand(String command) {
         Step step = Converter.convertStringToStep(command);
         movePiece(step);
     }
@@ -43,13 +48,18 @@ public class Board {
 
         if (isCageBusy(step.endCage())) {
             if (getPiece(step.endCage()).getColor() == currentPiece.getColor()) {
-                throw new IllegalStateException("Конечная клетка занята фигурой того же цвета");
+                throw new IllegalArgumentException("Конечная клетка занята фигурой того же цвета");
             }
         }
 
         if (currentPiece instanceof Pawn) {
             makePawnMove(currentPiece, step);
         } else {
+            if (isMagicMovePossible) {
+                isMagicMovePossible = false;
+                cageThatWasJumpedOver = null;
+            }
+
             if (checkStepForPossible(step, currentPiece)) {
                 performPermutationInBoard(step, currentPiece);
             } else {
@@ -74,7 +84,7 @@ public class Board {
 
 
     private int findQuantityColumns(Cage cage) {
-       return  (cage.horizontal() < 7) ? cage.vertical() - 1 : cage.vertical() - (cage.horizontal() - 5);
+        return (cage.horizontal() < 7) ? cage.vertical() - 1 : cage.vertical() - (cage.horizontal() - 5);
     }
 
     private boolean checkStepForPossible(Step step, AbstractPiece piece) {
@@ -99,38 +109,47 @@ public class Board {
     private void makePawnMove(AbstractPiece currentPiece, Step step) {
         if (isCageBusy(step.endCage()) && getPiece(step.endCage()).getColor() != currentPiece.getColor() &&
                 checkStepForPossible(step, currentPiece)) {
-            throw new IllegalStateException("Пешка так бить не может");
-        } else {
-            if (isCageBusy(step.endCage()) && getPiece(step.endCage()).getColor() != color &&
-                    checkForAttackingPawnMove(step)) {
-                performPermutationInBoard(step, currentPiece);
-            } else {
-                if (checkForAttackingPawnMove(step) && isPreviousMoveAvoidedBattle &&
-                        isSameCage(step.endCage(), cageThatWasJumpedOver)) {
-                    performPermutationInBoard(step, currentPiece);
-                    isPreviousMoveAvoidedBattle = false;
-                    cageThatWasJumpedOver = null;
-                } else {
-                    isPreviousMoveAvoidedBattle = false;
-                    cageThatWasJumpedOver = null;
-
-                    if (checkStepForPossible(step, currentPiece) && checkStepForEscapeFromTheBattle(step)) {
-                        isPreviousMoveAvoidedBattle = true;
-                        int shift = (color == PieceColor.BLACK) ? -1 : 1;
-                        cageThatWasJumpedOver = new Cage(currentPiece.getCage().vertical(),
-                                currentPiece.getCage().horizontal() + shift);
-                    } else {
-                        if (checkStepForPossible(step, currentPiece)) {
-                            performPermutationInBoard(step, currentPiece);
-                        } else {
-                            throw new IllegalStateException("Пешка так не ходит");
-                        }
-                    }
-                }
-
-            }
+            throw new IllegalArgumentException("Пешка так бить не может");
         }
 
+        if (isCageBusy(step.endCage()) && getPiece(step.endCage()).getColor() != color &&
+                checkForAttackingPawnMove(step)) {
+            performPermutationInBoard(step, currentPiece);
+            return;
+        }
+
+        if (checkForAttackingPawnMove(step) && isMagicMovePossible &&
+                isSameCage(step.endCage(), cageThatWasJumpedOver)) {
+            performPermutationInBoard(step, currentPiece);
+
+            int shift = (color == PieceColor.BLACK) ? 1 : -1;
+            int rowDeletedPawn = cageThatWasJumpedOver.horizontal() - 1 + shift;
+            int colDeletedPawn = findQuantityColumns(cageThatWasJumpedOver);
+            board[rowDeletedPawn][colDeletedPawn] = null;
+
+            isMagicMovePossible = false;
+            cageThatWasJumpedOver = null;
+            return;
+        } else {
+            isMagicMovePossible = false;
+            cageThatWasJumpedOver = null;
+        }
+
+        if (checkPawnForDoubleJump(step) && checkStepForPossible(step, currentPiece)) {
+            isMagicMovePossible = true;
+            int shift = (color == PieceColor.BLACK) ? -1 : 1;
+            cageThatWasJumpedOver = new Cage(currentPiece.getCage().vertical(),
+                    currentPiece.getCage().horizontal() + shift);
+
+            performPermutationInBoard(step, currentPiece);
+            return;
+        }
+
+        if (checkStepForPossible(step, currentPiece)) {
+            performPermutationInBoard(step, currentPiece);
+        } else {
+            throw new IllegalArgumentException("Пешка так не ходит");
+        }
     }
 
     private boolean checkForAttackingPawnMove(Step step) {
@@ -162,45 +181,53 @@ public class Board {
         }
     }
 
-    private boolean checkStepForEscapeFromTheBattle(Step step) {
+    private boolean checkPawnForDoubleJump(Step step) {
         int startV = step.startCage().vertical();
         int startH = step.startCage().horizontal();
+        int endV = step.endCage().vertical();
         int endH = step.endCage().horizontal();
 
-        if (color == PieceColor.WHITE && startH + 2 == endH && startV == startH) {
-            if (startV < 6 && (checkCageForPieceWithAnotherColor(new Cage(startV - 1, startH)) ||
-                    checkCageForPieceWithAnotherColor(new Cage(startV + 1, startH + 1)))) {
-                return true;
-            } else {
-                if (startV > 6 && (checkCageForPieceWithAnotherColor(new Cage(startV + 1, startH)) ||
-                checkCageForPieceWithAnotherColor(new Cage(startV - 1, startH + 1)))) {
-                    return true;
-                } else {
-                    return startV == 6 && (checkCageForPieceWithAnotherColor(new Cage(startV + 1, startH)) ||
-                            checkCageForPieceWithAnotherColor(new Cage(startV - 1, startH)));
-                }
-            }
+        if (color == PieceColor.WHITE && startV == endV && startH + 2 == endH) {
+            return true;
         }
 
-        if (color == PieceColor.BLACK && startH - 2 == endH && startV == startH) {
-            if (startV < 6 && (checkCageForPieceWithAnotherColor(new Cage(startV - 1, startH - 1)) ||
-                    checkCageForPieceWithAnotherColor(new Cage(startV + 1, startH)))) {
-                return true;
-            } else {
-                if (startV > 6 && (checkCageForPieceWithAnotherColor(new Cage(startV - 1, startH)) ||
-                        checkCageForPieceWithAnotherColor(new Cage(startV + 1, startH - 1)))) {
-                    return true;
-                } else {
-                    return startV == 6 && (checkCageForPieceWithAnotherColor(new Cage(startV - 1, startH - 1)) ||
-                            checkCageForPieceWithAnotherColor(new Cage(startV + 1, startH - 1)));
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private boolean checkCageForPieceWithAnotherColor(Cage cage) {
-        return BoardHelper.isCageBelongBoard(cage) && isCageBusy(cage) && getPiece(cage).getColor() != color;
+        return color == PieceColor.BLACK && startV == endV && startH - 2 == endH;
     }
 }
+
+
+/*
+ if (isCageBusy(step.endCage()) && getPiece(step.endCage()).getColor() != currentPiece.getColor() &&
+                checkStepForPossible(step, currentPiece)) {
+            throw new IllegalStateException("Пешка так бить не может");
+        } else {
+            if (isCageBusy(step.endCage()) && getPiece(step.endCage()).getColor() != color &&
+                    checkForAttackingPawnMove(step)) {
+                performPermutationInBoard(step, currentPiece);
+            } else {
+                if (checkForAttackingPawnMove(step) && isMagicMovePossible &&
+                        isSameCage(step.endCage(), cageThatWasJumpedOver)) {
+                    performPermutationInBoard(step, currentPiece);
+                    isMagicMovePossible = false;
+                    cageThatWasJumpedOver = null;
+                } else {
+                    isMagicMovePossible = false;
+                    cageThatWasJumpedOver = null;
+
+                    if (checkStepForPossible(step, currentPiece) && checkStepForEscapeFromTheBattle(step)) {
+                        isMagicMovePossible = true;
+                        int shift = (color == PieceColor.BLACK) ? -1 : 1;
+                        cageThatWasJumpedOver = new Cage(currentPiece.getCage().vertical(),
+                                currentPiece.getCage().horizontal() + shift);
+                    } else {
+                        if (checkStepForPossible(step, currentPiece)) {
+                            performPermutationInBoard(step, currentPiece);
+                        } else {
+                            throw new IllegalStateException("Пешка так не ходит");
+                        }
+                    }
+                }
+
+            }
+        }
+ */
