@@ -83,12 +83,14 @@ public class BoardHelper {
     }
 
     public static String[][] getBoardForConsole(AbstractPiece[][] array) {
-        String[][] board = new String[21][11];
+        String[][] board = new String[22][13]; //21 11
         for (String[] row : board) {
             Arrays.fill(row, "        ");
         }
 
         int flag = 5;
+        int rowForLetters = 1;
+        int colForNumbers = 1;
 
         for (int row = 0; row < array.length; row++) {
             for (int col = 0; col < array[row].length; col++) {
@@ -104,8 +106,35 @@ public class BoardHelper {
                     boardCol = col + shift;
                 }
 
-                board[boardRow][boardCol] = getDecoratedCage(array[row][col]);
+                board[boardRow + rowForLetters][boardCol + colForNumbers] = getDecoratedCage(array[row][col]);
             }
+        }
+
+        char[] letters = new char[] {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'k', 'l'};
+
+        for (int col = colForNumbers; col < board[0].length - colForNumbers; col++) {
+            int row = Math.abs(flag + colForNumbers - col);
+            board[row][col] = "    " + letters[col - colForNumbers] + "   ";
+        }
+
+        for (int row = 0; row < array.length; row++) {
+            int boardRow, boardCol;
+            if (row <= flag) {
+                boardRow = row * 2 + flag;
+                boardCol = 0;
+            } else {
+                int shift = row - flag;
+
+                boardRow = row * 2 + flag - shift;
+                boardCol =  shift;
+            }
+
+            int numberRow = row + 1;
+            String indent = (numberRow > 9) ? "    " : "     ";
+
+            board[boardRow + rowForLetters][boardCol] = indent + numberRow + "  ";
+
+            board[boardRow + rowForLetters][boardCol + array[row].length + colForNumbers] = "  " + numberRow;
         }
 
         return board;

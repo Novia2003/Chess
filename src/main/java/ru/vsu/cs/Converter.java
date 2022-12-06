@@ -21,7 +21,7 @@ public class Converter {
 
 
     private static Cage convertStringToCage(String string) {
-        if (string.length() != 2) {
+        if (string.length() != 2 && string.length() != 3f) {
             throw new IllegalArgumentException("Неверно заданная клетка");
         }
 
